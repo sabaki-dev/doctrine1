@@ -87,7 +87,8 @@ class Doctrine_I18n extends Doctrine_Record_Generator
         $this->hasColumn($this->_options['i18nField'], $this->_options['type'], $this->_options['length'], $options);
 
         $this->bindQueryParts(array('indexBy' => $this->_options['i18nField']));
- 
+    }
+
     /**
      * buildDefinition
      *
