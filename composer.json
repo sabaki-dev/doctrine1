@@ -6,7 +6,7 @@
     "homepage": "http://www.doctrine-project.org",
     "license": "LGPL",
     "authors": [
-        {"name": "Tomasz Ślązok", "email": "tomek@sabaki.pl"}
+        {"name": "Tomasz Ślązok", "email": "tomek@sabaki.pl"},
         {"name": "Konsta Vesterinen", "email": "kvesteri@cc.hut.fi"},
         {"name": "Jonathan Wage", "email": "jonwage@gmail.com"}
     ],
