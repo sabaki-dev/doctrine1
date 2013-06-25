@@ -75,10 +75,10 @@ class Doctrine_Template_Listener_Sluggable extends Doctrine_Record_Listener
      */
     public function preUpdate(Doctrine_Event $event)
     {
-        if (false !== $this->_options['unique']) {
-            $record = $event->getInvoker();
-            $name = $record->getTable()->getFieldName($this->_options['name']);
+        $record = $event->getInvoker();
+        $name = $record->getTable()->getFieldName($this->_options['name']);
 
+        if (false !== $this->_options['unique']) {
             if ( ! $record->$name || (
                 false !== $this->_options['canUpdate'] &&
                 ! array_key_exists($name, $record->getModified())
@@ -90,6 +90,8 @@ class Doctrine_Template_Listener_Sluggable extends Doctrine_Record_Listener
             )) {
                 $record->$name = $this->buildSlugFromSlugField($record);
             }
+        } elseif (false !== $this->_options['canUpdate']) {
+            $record->$name = $this->buildSlugFromFields($record);
         }
     }
 
