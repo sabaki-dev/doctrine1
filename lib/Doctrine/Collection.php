@@ -37,6 +37,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
      * @var array $data                     an array containing the records of this collection
      */
     protected $data = array();
+    protected $oids = array();
 
     /**
      * @var Doctrine_Table $table           each collection has only records of specified table
@@ -140,6 +141,14 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
     public function setData(array $data)
     {
         $this->data = $data;
+
+        $oids = array();
+
+        foreach ($data as $record) {
+            $oids[$record->getOid()] = true;
+        }
+
+        $this->oids = $oids;
     }
 
     /**
@@ -178,6 +187,14 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
         foreach ($array as $name => $values) {
             $this->$name = $values;
         }
+
+        $oids = array();
+
+        foreach ($this->data as $record) {
+            $oids[$record->oid()] = true;
+        }
+
+        $this->oids = $oids;
 
         $this->_table = $connection->getTable($this->_table);
 
@@ -325,6 +342,8 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
         $removed = $this->data[$key];
 
         unset($this->data[$key]);
+        unset($this->oids[$removed->oid()]);
+
         return $removed;
     }
 
@@ -347,7 +366,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
      */
     public function search(Doctrine_Record $record)
     {
-        return array_search($record, $this->data, true);
+        return isset($this->oids[$record->oid()]);
     }
 
     /**
@@ -385,6 +404,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
             } else {
                 $this->data[$key] = $record;
             }
+            $this->oids[$record->oid()] = true;
 
             if (isset($this->keyColumn)) {
                 $record->set($this->keyColumn, $key);
@@ -451,6 +471,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
         }
 
         $this->data[$key] = $record;
+        $this->oids[$record->oid()] = true;
     }
 
     /**
@@ -477,15 +498,11 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
                 }
             }
         }
-        /**
-         * for some weird reason in_array cannot be used here (php bug ?)
-         *
-         * if used it results in fatal error : [ nesting level too deep ]
-         */
-        foreach ($this->data as $val) {
-            if ($val === $record) {
-                return false;
-            }
+
+        $oid = $record->oid();
+
+        if (isset($this->oids[$oid])) {
+            return false;
         }
 
         if (isset($key)) {
@@ -493,6 +510,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
                 return false;
             }
             $this->data[$key] = $record;
+            $this->oids[$oid] = true;
             return true;
         }
 
@@ -505,6 +523,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
         } else {
             $this->data[] = $record;
         }
+        $this->oids[$oid] = true;
 
         return true;
     }
@@ -1052,6 +1071,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
     public function clear()
     {
         $this->data = array();
+        $this->oids = array();
     }
 
     /**
@@ -1070,6 +1090,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
         }
 
         $this->data = array();
+        $this->oids = array();
 
         if ($this->reference) {
             $this->reference->free($deep);
