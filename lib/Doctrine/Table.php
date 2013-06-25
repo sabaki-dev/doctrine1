@@ -2095,7 +2095,7 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
             $r = $this->_relationIdentifiers[$fieldName];
 
             // Related record is not saved yet
-            if (!$record->$r->exists()) {
+            if (!$record->hasReference($r) || !$record->$r->exists())
                 return $errorStack;
             }
         }
