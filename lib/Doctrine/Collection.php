@@ -797,6 +797,21 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
         }
     }
 
+    private function getCompositeKey($record)
+    {
+        $composite = array();
+
+        foreach ((array) $this->_table->getIdentifier() as $keyPart) {
+            if (!isset($record[$keyPart])) {
+                return false;
+            }
+
+            $composite[] = $record[$keyPart];
+        }
+
+        return join('-', $composite);
+    }
+
     /**
      * synchronizes a Doctrine_Collection with data from an array
      *
@@ -808,18 +823,49 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
      */
     public function synchronizeWithArray(array $array)
     {
-        foreach ($this as $key => $record) {
-            if (isset($array[$key])) {
-                $record->synchronizeWithArray($array[$key]);
-                unset($array[$key]);
-            } else {
-                // remove records that don't exist in the array
-                $this->remove($key);
+        $idArray = array();
+        $syncedList = array();
+
+        // first synchronize records with matching identifier (single-column PK supported only)
+
+        // build map of data that can be synchronized using identifier
+        foreach ($array as $key => $record) {
+            $composite = $this->getCompositeKey($record);
+            if ($composite !== false) {
+                $idArray[$composite] = $key;
             }
         }
+
+        // synchronize all that can be synchronized based on identifier
+        if ($idArray) {
+            foreach ($this as $key => $record) {
+                $recId = $this->getCompositeKey($record);
+                if ($recId !== false && isset($idArray[$recId])) {
+                    $arrayKey = $idArray[$recId];
+                    $record->synchronizeWithArray($array[$arrayKey]);
+                    unset($array[$arrayKey]);
+                    $syncedList[$key] = true;
+                }
+            }
+        }
+
+        // synchronize the rest of data
+
+        foreach ($this as $key => $record) {
+            if (!isset($syncedList[$key])) {
+                if (isset($array[$key])) {
+                    $record->synchronizeWithArray($array[$key]);
+                    unset($array[$key]);
+                } else {
+                    // remove records that don't exist in the array
+                    $this->remove($key);
+                }
+            }
+        }
+
         // create new records for each new row in the array
-        foreach ($array as $rowKey => $row) {
-            $this[$rowKey]->fromArray($row);
+        foreach ($array as $row) {
+            $this->get(null)->fromArray($row);
         }
     }
 
