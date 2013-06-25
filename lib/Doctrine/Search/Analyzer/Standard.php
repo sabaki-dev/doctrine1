@@ -263,13 +263,19 @@ class Doctrine_Search_Analyzer_Standard extends Doctrine_Search_Analyzer impleme
 
     public function analyze($text, $encoding = null)
     {
+        static $stopwords;
+
+        if (!isset($stopwords)) {
+            $stopwords = array_flip(self::$_stopwords);
+        }
+
         $text = preg_replace('/[\'`´"]/', '', $text);
         $text = Doctrine_Inflector::unaccent($text);
         $text = preg_replace('/[^A-Za-z0-9]/', ' ', $text);
         $text = str_replace('  ', ' ', $text);
 
         $terms = explode(' ', $text);
-        
+
         $ret = array();
         if ( ! empty($terms)) {
             foreach ($terms as $i => $term) {
@@ -278,9 +284,9 @@ class Doctrine_Search_Analyzer_Standard extends Doctrine_Search_Analyzer impleme
                 }
                 $lower = strtolower(trim($term));
 
-                if (in_array($lower, self::$_stopwords)) {
-                    continue;
-                }
+                if (isset($stopwords[$lower])) {
+                     continue;
+                 }
 
                 $ret[$i] = $lower;
             }
