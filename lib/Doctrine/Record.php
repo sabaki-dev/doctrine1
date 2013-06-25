@@ -1930,7 +1930,7 @@ abstract class Doctrine_Record extends Doctrine_Record_Abstract implements Count
         // [FIX] Prevent mapped Doctrine_Records from being displayed fully
         foreach ($this->_values as $key => $value) {
             $a[$key] = ($value instanceof Doctrine_Record || $value instanceof Doctrine_Collection)
-                ? $value->toArray($deep, $prefixKey) : $value;
+                ? $value->toArray($deep, $prefixKey) : $this->get($key);
         }
 
         $this->_state = $stateBeforeLock;
