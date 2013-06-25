@@ -232,6 +232,8 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
      */
     protected $record;
 
+    protected $_relationIdentifiers;
+
     /**
      * the constructor
      *
@@ -1010,6 +1012,21 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
     public function getRelation($alias, $recursive = true)
     {
         return $this->_parser->getRelation($alias, $recursive);
+    }
+
+    public function getRelationIdentifiers()
+    {
+        if (isset($this->_relationIdentifiers)) {
+            return $this->_relationIdentifiers;
+        }
+
+        $this->_relationIdentifiers = array();
+
+        foreach ($this->getRelations() as $relation) {
+            $this->_relationIdentifiers[$relation->getLocalFieldName()] = $relation->getAlias();
+        }
+
+        return $this->_relationIdentifiers;
     }
 
     /**
@@ -2073,6 +2090,13 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
                 if ($fieldName == $relation->getLocalFieldName() && (get_class($value) == $relation->getClass() || is_subclass_of($value, $relation->getClass()))) {
                     return $errorStack;
                 }
+            }
+        } elseif (array_key_exists($fieldName, $this->getRelationIdentifiers()) && $record !== null) {
+            $r = $this->_relationIdentifiers[$fieldName];
+
+            // Related record is not saved yet
+            if (!$record->$r->exists()) {
+                return $errorStack;
             }
         }
 
