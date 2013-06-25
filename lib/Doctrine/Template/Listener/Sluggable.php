@@ -119,6 +119,13 @@ class Doctrine_Template_Listener_Sluggable extends Doctrine_Record_Listener
             $value = substr($value, 0, -1);
         }
 
+        // If slug is longer then the column length then we need to trim it
+        // and try to generate a unique slug again
+        $length = $record->getTable()->getFieldLength($this->_options['name']);
+        if (strlen($value) > $length) {
+            $value = substr($value, 0, $length);
+        }
+
     	if ($this->_options['unique'] === true) {
     		return $this->getUniqueSlug($record, $value);
     	}
