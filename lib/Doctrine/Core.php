@@ -652,7 +652,13 @@ class Doctrine_Core
                 $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir),
                                                         RecursiveIteratorIterator::LEAVES_ONLY);
 
-                foreach ($it as $file) {
+                $files = array();
+                foreach ($it as $pathName => $file) {
+                    $files[$pathName] = $file;
+                }
+                ksort($files);
+
+                foreach ($files as $file) {
                     $e = explode('.', $file->getFileName());
 
                     if (end($e) === 'php' && strpos($file->getFileName(), '.inc') === false) {
